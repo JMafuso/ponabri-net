@@ -1,0 +1,6 @@
+@Ponabri.Api_HostAddress = http://localhost:5124
+
+GET {{Ponabri.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
