@@ -12,8 +12,8 @@ namespace Ponabri.Api.Services
 
     public class RabbitMQProducer : IMessageProducer
     {
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
+        private readonly IConnection? _connection;
+        private readonly IModel? _channel;
 
         public RabbitMQProducer() // Idealmente, injetar configurações
         {
@@ -43,11 +43,11 @@ namespace Ponabri.Api.Services
                 return; // Não envia se não houver canal
             }
 
-            _channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null!);
             var json = JsonSerializer.Serialize(message);
             var body = Encoding.UTF8.GetBytes(json);
 
-            _channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: null, body: body);
+            _channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: null!, body: body);
         }
     }
 } 

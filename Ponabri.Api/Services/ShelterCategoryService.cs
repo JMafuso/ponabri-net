@@ -8,7 +8,7 @@ namespace Ponabri.Api.Services
     public class ShelterCategoryService
     {
         private readonly MLContext _mlContext;
-        private ITransformer _model;
+        private ITransformer _model = default!;
 
         public ShelterCategoryService()
         {

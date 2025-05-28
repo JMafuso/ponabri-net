@@ -12,11 +12,11 @@ namespace Ponabri.Api.Models
     public class Reserva
     {
         public int Id { get; set; }
-        public string CodigoReserva { get; set; } // Ex: PONABRI-12345
+        public string CodigoReserva { get; set; } = default!;
         public int UsuarioId { get; set; }
-        public Usuario Usuario { get; set; }
+        public Usuario Usuario { get; set; } = null!;
         public int AbrigoId { get; set; }
-        public Abrigo Abrigo { get; set; }
+        public Abrigo Abrigo { get; set; } = null!;
         public int QuantidadePessoas { get; set; }
         public bool UsouVagaCarro { get; set; }
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;

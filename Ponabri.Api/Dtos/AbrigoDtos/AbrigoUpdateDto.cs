@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Ponabri.Api.Models; // Necessário para AbrigoStatus
 
-namespace Ponabri.Api.Dtos
+namespace Ponabri.Api.Dtos.AbrigoDtos // Namespace ATUALIZADO
 {
     /// <summary>
     /// DTO para atualização de um abrigo existente.
@@ -27,7 +27,7 @@ namespace Ponabri.Api.Dtos
         [StringLength(100, ErrorMessage = "O contato do responsável deve ter no máximo 100 caracteres.")]
         public string? ContatoResponsavel { get; set; }
 
-        [StringLength(500, ErrorMessage = "A descrição deve ter no máximo 500 caracteres.")] // Adicionando um limite para Descricao também
+        [StringLength(500, ErrorMessage = "A descrição deve ter no máximo 500 caracteres.")]
         public string? Descricao { get; set; }
 
         public AbrigoStatus? Status { get; set; }

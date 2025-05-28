@@ -80,7 +80,7 @@ builder.Services.AddDbContext<PonabriDbContext>(options =>
     options.UseOracle(builder.Configuration.GetConnectionString("DefaultConnection"), opt =>
     {
         // Configurações específicas do Oracle, se necessário, por exemplo:
-        // opt.UseOracleSQLCompatibility("12"); // Ou a versão do seu banco
+        opt.UseOracleSQLCompatibility(Microsoft.EntityFrameworkCore.OracleSQLCompatibility.DatabaseVersion19); // Corrigido para DatabaseVersion19 com base na documentação
     }));
 
 // Antes de builder.Services.AddControllers();

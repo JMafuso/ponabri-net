@@ -1,15 +1,10 @@
+using Ponabri.Api.Dtos.Common;
+using Ponabri.Api.Models;
 using System.Collections.Generic;
 
-namespace Ponabri.Api.Models
+namespace Ponabri.Api.Dtos.AbrigoDtos
 {
-    public enum AbrigoStatus
-    {
-        Aberto,
-        Lotado,
-        Fechado
-    }
-
-    public class Abrigo
+    public class AbrigoDetailsDto
     {
         public int Id { get; set; }
         public string NomeLocal { get; set; } = default!;
@@ -20,9 +15,9 @@ namespace Ponabri.Api.Models
         public int CapacidadeCarros { get; set; }
         public int VagasCarrosDisponiveis { get; set; }
         public string ContatoResponsavel { get; set; } = default!;
-        public AbrigoStatus Status { get; set; } = AbrigoStatus.Aberto;
         public string Descricao { get; set; } = default!;
         public string? CategoriaSugeridaML { get; set; }
-        public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
+        public AbrigoStatus Status { get; set; }
+        public List<LinkDto> Links { get; set; } = new List<LinkDto>();
     }
 } 

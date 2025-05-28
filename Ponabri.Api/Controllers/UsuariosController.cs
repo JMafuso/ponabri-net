@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Ponabri.Api.Data;
 using Ponabri.Api.Models;
 using Ponabri.Api.Dtos.UsuarioDtos;
+using Ponabri.Api.Dtos.Common; // Adicionado para LinkDto
 using System.Threading.Tasks;
 using BCrypt.Net; // Para hashing de senha
 using Microsoft.Extensions.Configuration; // Para ler appsettings.json para JWT
@@ -29,7 +30,7 @@ namespace Ponabri.Api.Controllers
         public UsuariosController(PonabriDbContext context, IConfiguration configuration)
         {
             _context = context;
-            _configuration = configuration; // Injetar IConfiguration
+            _configuration = configuration; 
         }
 
         // POST: api/Usuarios/registrar
@@ -53,24 +54,17 @@ namespace Ponabri.Api.Controllers
 
             var usuario = new Usuario
             {
-                Nome = usuarioRegisterDto.Nome,
+                Nome = usuarioRegisterDto.NomeCompleto,
                 Email = usuarioRegisterDto.Email,
                 Senha = senhaHash,
-                Role = UserRoles.User // Atribuir papel padrão no registro
+                Role = UserRoles.User 
             };
 
             _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
-
-            var usuarioResponseDto = new UsuarioResponseDto
-            {
-                Id = usuario.Id,
-                Nome = usuario.Nome,
-                Email = usuario.Email
-                // Não retornamos a Role aqui, mas o token de login a conterá.
-            };
-
-            return CreatedAtAction(nameof(GetUsuario), new { id = usuario.Id }, usuarioResponseDto);
+            
+            var dto = MapToUsuarioResponseDto(usuario, null, null, true);
+            return CreatedAtAction(nameof(GetUsuario), new { id = usuario.Id }, dto);
         }
 
         // POST: api/Usuarios/login
@@ -96,6 +90,7 @@ namespace Ponabri.Api.Controllers
             var jwtKey = _configuration["JwtSettings:Key"];
             if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32) 
             {
+                // Logar o erro e/ou retornar um erro interno do servidor
                 Console.Error.WriteLine("Chave JWT não configurada corretamente ou é muito curta.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Erro na configuração de autenticação.");
             }
@@ -116,7 +111,7 @@ namespace Ponabri.Api.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(2),
+                Expires = DateTime.UtcNow.AddHours(Convert.ToDouble(_configuration["JwtSettings:ExpirationHours"] ?? "2")), // Tempo de expiração do token
                 Issuer = _configuration["JwtSettings:Issuer"],
                 Audience = _configuration["JwtSettings:Audience"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -140,16 +135,20 @@ namespace Ponabri.Api.Controllers
         {
             var solicitanteId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole(UserRoles.Admin);
-
-            if (!isAdmin && (solicitanteId == null || id.ToString() != solicitanteId))
-            {
-                return Forbid("Acesso negado. Você só pode visualizar seus próprios dados."); 
-            }
+            // Obtem a role do solicitante para passar ao método de mapeamento
+            var solicitanteRole = User.FindFirstValue(ClaimTypes.Role); 
 
             var usuario = await _context.Usuarios.FindAsync(id);
             if (usuario == null) return NotFound();
+
+            // Verifica permissão: ou é admin, ou está acessando os próprios dados
+            if (!isAdmin && (solicitanteId == null || usuario.Id.ToString() != solicitanteId))
+            {
+                return Forbid("Acesso negado. Você só pode visualizar seus próprios dados."); 
+            }
             
-            return Ok(new UsuarioResponseDto { Id = usuario.Id, Nome = usuario.Nome, Email = usuario.Email });
+            var dto = MapToUsuarioResponseDto(usuario, solicitanteId, solicitanteRole);
+            return Ok(dto);
         }
 
         // GET: api/Usuarios
@@ -165,20 +164,30 @@ namespace Ponabri.Api.Controllers
             if (pageSize <= 0) pageSize = 10;
             if (pageSize > 100) pageSize = 100; 
 
+            // O solicitante é garantidamente Admin devido ao [Authorize(Roles = UserRoles.Admin)]
+            var solicitanteId = User.FindFirstValue(ClaimTypes.NameIdentifier); 
+            var solicitanteRole = UserRoles.Admin; 
+
             var query = _context.Usuarios.AsQueryable();
             
             var totalItems = await query.CountAsync();
             var usuarios = await query
+                .OrderBy(u => u.Id) // Adiciona uma ordenação padrão
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .Select(u => new UsuarioResponseDto { Id = u.Id, Nome = u.Nome, Email = u.Email })
                 .ToListAsync();
             
             Response.Headers.Append("X-Total-Count", totalItems.ToString());
             Response.Headers.Append("X-Page-Number", pageNumber.ToString());
             Response.Headers.Append("X-Page-Size", pageSize.ToString());
 
-            return Ok(usuarios);
+            var dtos = new List<UsuarioResponseDto>();
+            foreach (var usuario in usuarios)
+            {
+                // Ao listar todos, o "solicitante" é o admin, então passamos esses dados.
+                dtos.Add(MapToUsuarioResponseDto(usuario, solicitanteId, solicitanteRole));
+            }
+            return Ok(dtos);
         }
 
         // PUT: api/Usuarios/{id}
@@ -197,13 +206,14 @@ namespace Ponabri.Api.Controllers
             var solicitanteId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole(UserRoles.Admin);
 
-            if (!isAdmin && (solicitanteId == null || id.ToString() != solicitanteId))
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null) return NotFound();
+
+            // Verifica permissão
+            if (!isAdmin && (solicitanteId == null || usuario.Id.ToString() != solicitanteId))
             {
                 return Forbid("Acesso negado. Você só pode atualizar seus próprios dados."); 
             }
-
-            var usuario = await _context.Usuarios.FindAsync(id);
-            if (usuario == null) return NotFound();
 
             if (!string.IsNullOrWhiteSpace(usuarioUpdateDto.Nome))
             {
@@ -217,9 +227,7 @@ namespace Ponabri.Api.Controllers
                 }
                 usuario.Email = usuarioUpdateDto.Email;
             }
-            // Admins não devem mudar a role por este endpoint para evitar auto-promoção acidental sem um fluxo dedicado.
-            // A alteração de Role deve ser uma ação administrativa separada e mais controlada.
-
+            
             _context.Entry(usuario).State = EntityState.Modified;
             try
             {
@@ -249,15 +257,17 @@ namespace Ponabri.Api.Controllers
 
             if (usuarioSendoExcluido == null) return NotFound();
 
-            if (!isAdmin && (solicitanteId == null || id.ToString() != solicitanteId))
+            // Verifica permissão
+            if (!isAdmin && (solicitanteId == null || usuarioSendoExcluido.Id.ToString() != solicitanteId))
             {
                 return Forbid("Acesso negado. Você só pode excluir sua própria conta.");
             }
 
-            // Evitar que um admin se auto-exclua se for o único admin (precisaria de lógica mais complexa)
-            // if (isAdmin && id.ToString() == solicitanteId && (await _context.Usuarios.CountAsync(u => u.Role == UserRoles.Admin)) <= 1)
+            // Lógica para evitar que o único admin se auto-exclua (opcional)
+            // if (isAdmin && usuarioSendoExcluido.Id.ToString() == solicitanteId && 
+            //     (await _context.Usuarios.CountAsync(u => u.Role == UserRoles.Admin)) <= 1)
             // {
-            //     return BadRequest("Não é possível excluir o único administrador.");
+            //     return BadRequest("Não é possível excluir o único administrador do sistema.");
             // }
 
             _context.Usuarios.Remove(usuarioSendoExcluido);
@@ -267,15 +277,21 @@ namespace Ponabri.Api.Controllers
 
         // POST: api/usuarios/{id}/promoteToAdmin
         [HttpPost("{id}/promoteToAdmin")]
-        [Authorize(Roles = UserRoles.Admin)] // Apenas Admins podem promover outros usuários
+        [Authorize(Roles = UserRoles.Admin)] 
         [SwaggerOperation(Summary = "Promove um usuário para o papel de Administrador (protegido - Admin)")]
         [SwaggerResponse(StatusCodes.Status204NoContent, "Usuário promovido a Administrador com sucesso")]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "Usuário já é Administrador")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Usuário já é Administrador ou o usuário especificado é o próprio solicitante")]
         [SwaggerResponse(StatusCodes.Status401Unauthorized, "Não autenticado")]
         [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado. Requer papel de Administrador.")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "Usuário não encontrado")]
         public async Task<IActionResult> PromoteToAdmin(int id)
         {
+            var solicitanteId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (id.ToString() == solicitanteId)
+            {
+                 return BadRequest(new { message = "Um administrador não pode se auto-promover (ou re-promover)." });
+            }
+
             var usuarioParaPromover = await _context.Usuarios.FindAsync(id);
 
             if (usuarioParaPromover == null)
@@ -293,6 +309,54 @@ namespace Ponabri.Api.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        private UsuarioResponseDto MapToUsuarioResponseDto(Usuario usuario, string? solicitanteId = null, string? solicitanteRole = null, bool isNewUserRegistration = false)
+        {
+            if (!isNewUserRegistration && (HttpContext?.User?.Identity?.IsAuthenticated ?? false))
+            {
+                solicitanteId ??= User.FindFirstValue(ClaimTypes.NameIdentifier);
+                solicitanteRole ??= User.FindFirstValue(ClaimTypes.Role);
+            }
+            
+            var dto = new UsuarioResponseDto
+            {
+                Id = usuario.Id,
+                Nome = usuario.Nome,
+                Email = usuario.Email,
+                Role = usuario.Role 
+            };
+
+            var selfUrl = Url.Action(nameof(GetUsuario), "Usuarios", new { id = usuario.Id }, Request.Scheme);
+            if (selfUrl != null) dto.Links.Add(new LinkDto(selfUrl, "self", "GET"));
+            
+            bool podeGerenciar = (solicitanteRole == UserRoles.Admin) || (!string.IsNullOrEmpty(solicitanteId) && usuario.Id.ToString() == solicitanteId);
+
+            if (podeGerenciar)
+            {
+                var updateUrl = Url.Action(nameof(PutUsuario), "Usuarios", new { id = usuario.Id }, Request.Scheme);
+                if (updateUrl != null) dto.Links.Add(new LinkDto(updateUrl, "update_usuario", "PUT"));
+
+                var deleteUrl = Url.Action(nameof(DeleteUsuario), "Usuarios", new { id = usuario.Id }, Request.Scheme);
+                if (deleteUrl != null) dto.Links.Add(new LinkDto(deleteUrl, "delete_usuario", "DELETE"));
+            }
+
+            if (solicitanteRole == UserRoles.Admin && usuario.Role != UserRoles.Admin && usuario.Id.ToString() != solicitanteId)
+            {
+                var promoteUrl = Url.Action(nameof(PromoteToAdmin), "Usuarios", new { id = usuario.Id }, Request.Scheme);
+                if (promoteUrl != null) dto.Links.Add(new LinkDto(promoteUrl, "promote_to_admin", "POST"));
+            }
+            
+            if (podeGerenciar) 
+            {
+                var routeValues = (solicitanteRole == UserRoles.Admin && solicitanteId != usuario.Id.ToString()) 
+                                    ? new { usuarioId = usuario.Id } 
+                                    : null; 
+                var listReservasUrl = Url.Action(nameof(ReservasController.GetReservas), "Reservas", routeValues, Request.Scheme);
+                if (listReservasUrl != null) dto.Links.Add(new LinkDto(listReservasUrl, "listar_reservas_usuario", "GET"));
+            }
+
+            return dto;
         }
     }
 } 

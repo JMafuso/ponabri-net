@@ -9,25 +9,25 @@ namespace Ponabri.Api.Dtos.ReservaDtos
     public class AbrigoInfoForReservaDto
     {
         public int Id { get; set; }
-        public string NomeLocal { get; set; }
-        public string Endereco { get; set; }
+        public string NomeLocal { get; set; } = default!;
+        public string Endereco { get; set; } = default!;
     }
 
     public class UsuarioInfoForReservaDto
     {
         public int Id { get; set; }
-        public string Nome { get; set; }
-        public string Email { get; set; }
+        public string Nome { get; set; } = default!;
+        public string Email { get; set; } = default!;
     }
 
     public class ReservaResponseDto
     {
         public int Id { get; set; }
-        public string CodigoReserva { get; set; }
+        public string CodigoReserva { get; set; } = default!;
         public int UsuarioId { get; set; }
-        public UsuarioInfoForReservaDto Usuario {get; set; } // Detalhes do usuário
+        public UsuarioInfoForReservaDto? Usuario {get; set; }
         public int AbrigoId { get; set; }
-        public AbrigoInfoForReservaDto Abrigo { get; set; } // Detalhes do abrigo
+        public AbrigoInfoForReservaDto? Abrigo { get; set; }
         public int QuantidadePessoas { get; set; }
         public bool UsouVagaCarro { get; set; }
         public DateTime DataCriacao { get; set; }

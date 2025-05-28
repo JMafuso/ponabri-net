@@ -89,10 +89,7 @@ namespace Ponabri.Api.Controllers
             _messageProducer.SendMessage(eventoReserva, "reservas_criadas_queue");
 
             var responseDto = await MapToReservaResponseDto(reserva);
-            responseDto.Links.Add(new LinkDto(Url.Action(nameof(GetReservaById), "Reservas", new { id = reserva.Id }, Request.Scheme), "self", "GET"));
-            responseDto.Links.Add(new LinkDto(Url.Action(nameof(ValidarReservaParaIoT), "Reservas", new { codigoReserva = reserva.CodigoReserva }, Request.Scheme), "validar_reserva_iot", "GET"));
-            responseDto.Links.Add(new LinkDto(Url.Action(nameof(CancelarReserva), "Reservas", new { id = reserva.Id }, Request.Scheme), "cancelar_reserva", "PUT"));
-
+            
             return CreatedAtAction(nameof(GetReservaById), new { id = reserva.Id }, responseDto);
         }
 
@@ -106,49 +103,67 @@ namespace Ponabri.Api.Controllers
         [SwaggerResponse(StatusCodes.Status404NotFound, "Reserva não encontrada")]
         public async Task<ActionResult<ReservaResponseDto>> GetReservaById(int id)
         {
-            var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var solicitanteId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole(UserRoles.Admin);
 
+            // Carregar a reserva com o usuário e abrigo associados
             var reserva = await _context.Reservas
-                .Include(r => r.Usuario) 
-                .Include(r => r.Abrigo)  
-                .FirstOrDefaultAsync(r => r.Id == id);
+                                .Include(r => r.Usuario)
+                                .Include(r => r.Abrigo)
+                                .FirstOrDefaultAsync(r => r.Id == id);
 
             if (reserva == null) return NotFound();
 
-            if (!isAdmin && reserva.UsuarioId.ToString() != usuarioId)
+            // Verifica permissão: Admin pode ver qualquer uma, usuário só pode ver a sua.
+            if (!isAdmin && (solicitanteId == null || reserva.UsuarioId.ToString() != solicitanteId))
             {
-                return Forbid("Você não tem permissão para acessar esta reserva.");
+                return Forbid("Acesso negado à reserva de outro usuário.");
             }
             
             return Ok(await MapToReservaResponseDto(reserva));
         }
 
         // GET: api/Reservas
-        [HttpGet]
+        [HttpGet(Name = "GetReservas")]
         [Authorize] // Requer autenticação
-        [SwaggerOperation(Summary = "Lista reservas.", Description = "Usuários listam suas próprias reservas. Administradores listam todas as reservas.")]
+        [SwaggerOperation(Summary = "Lista reservas com paginação.", 
+                          Description = "Usuários listam suas próprias reservas. Administradores podem listar todas ou filtrar por usuarioId.")]
         [SwaggerResponse(StatusCodes.Status200OK, "Lista de reservas retornada", typeof(List<ReservaResponseDto>))]
         [SwaggerResponse(StatusCodes.Status401Unauthorized, "Não autenticado")]
-        public async Task<ActionResult<IEnumerable<ReservaResponseDto>>> GetReservas([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Parâmetros de paginação inválidos")]
+        public async Task<ActionResult<IEnumerable<ReservaResponseDto>>> GetReservas(
+            [FromQuery] int? usuarioId = null, // Parâmetro opcional para filtro por ID de usuário (para Admins)
+            [FromQuery] int pageNumber = 1, 
+            [FromQuery] int pageSize = 10)
         {
             if (pageNumber <= 0) pageNumber = 1;
             if (pageSize <= 0) pageSize = 10;
             if (pageSize > 100) pageSize = 100;
 
-            var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var solicitanteIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole(UserRoles.Admin);
             
             var query = _context.Reservas
                 .Include(r => r.Usuario)
                 .Include(r => r.Abrigo)
                 .OrderByDescending(r => r.DataCriacao)
-                .AsQueryable(); // Inicia a query
+                .AsQueryable();
             
-            if (!isAdmin) // Se não for admin, filtra pelo usuário autenticado
+            if (isAdmin && usuarioId.HasValue)
             {
-                query = query.Where(r => r.UsuarioId.ToString() == usuarioId);
+                // Admin está filtrando por um usuário específico
+                query = query.Where(r => r.UsuarioId == usuarioId.Value);
             }
+            else if (!isAdmin)
+            {
+                // Usuário não-admin só pode ver suas próprias reservas
+                if (string.IsNullOrEmpty(solicitanteIdString) || !int.TryParse(solicitanteIdString, out int solicitanteIdParsed))
+                {
+                     return Unauthorized("ID do solicitante inválido."); // Ou BadRequest
+                }
+                query = query.Where(r => r.UsuarioId == solicitanteIdParsed);
+            }
+            // Se for Admin e usuarioId não for fornecido, todas as reservas são listadas (sem filtro adicional aqui)
 
             var totalItems = await query.CountAsync();
             var reservas = await query
@@ -163,7 +178,8 @@ namespace Ponabri.Api.Controllers
             var responseDtos = new List<ReservaResponseDto>();
             foreach(var reserva in reservas)
             {
-                responseDtos.Add(await MapToReservaResponseDto(reserva));
+                // Os links no MapToReservaResponseDto já são contextuais à reserva em si
+                responseDtos.Add(await MapToReservaResponseDto(reserva)); 
             }
             return Ok(responseDtos);
         }
@@ -179,13 +195,16 @@ namespace Ponabri.Api.Controllers
         [SwaggerResponse(StatusCodes.Status404NotFound, "Reserva ou abrigo associado não encontrado")]
         public async Task<ActionResult<ReservaResponseDto>> CancelarReserva(int id)
         {
-            var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var solicitanteUsuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Renomeado para clareza
             var isAdmin = User.IsInRole(UserRoles.Admin);
-            var reserva = await _context.Reservas.Include(r => r.Abrigo).FirstOrDefaultAsync(r => r.Id == id);
+            var reserva = await _context.Reservas
+                                .Include(r => r.Usuario) // Adicionado Include para Usuario
+                                .Include(r => r.Abrigo)
+                                .FirstOrDefaultAsync(r => r.Id == id);
 
             if (reserva == null) return NotFound("Reserva não encontrada.");
 
-            if (!isAdmin && reserva.UsuarioId.ToString() != usuarioId)
+            if (!isAdmin && reserva.UsuarioId.ToString() != solicitanteUsuarioId)
             {
                 return Forbid("Você não tem permissão para cancelar esta reserva.");
             }
@@ -198,6 +217,8 @@ namespace Ponabri.Api.Controllers
             var abrigo = reserva.Abrigo; 
             if (abrigo == null) 
             {
+                // Isso não deveria acontecer se o Include funcionou e a FK está correta,
+                // mas é uma boa verificação defensiva.
                 return NotFound(new { mensagem = "Abrigo associado à reserva não encontrado. Não é possível ajustar as vagas." });
             }
 
@@ -253,12 +274,10 @@ namespace Ponabri.Api.Controllers
         // Método auxiliar para mapear Reserva para ReservaResponseDto
         private async Task<ReservaResponseDto> MapToReservaResponseDto(Reserva reserva)
         {
-            // Carregar explicitamente o usuário e abrigo se não foram incluídos na consulta original
-            // No entanto, é melhor usar .Include() nas consultas Linq como feito acima.
             var usuario = reserva.Usuario ?? await _context.Usuarios.FindAsync(reserva.UsuarioId);
             var abrigo = reserva.Abrigo ?? await _context.Abrigos.FindAsync(reserva.AbrigoId);
 
-            return new ReservaResponseDto
+            var dto = new ReservaResponseDto
             {
                 Id = reserva.Id,
                 CodigoReserva = reserva.CodigoReserva,
@@ -270,8 +289,40 @@ namespace Ponabri.Api.Controllers
                 UsouVagaCarro = reserva.UsouVagaCarro,
                 DataCriacao = reserva.DataCriacao,
                 Status = reserva.Status,
-                Links = new List<LinkDto>() // Inicializa a lista, os links são adicionados pelo chamador
+                Links = new List<LinkDto>()
             };
+
+            var selfUrl = Url.Action(nameof(GetReservaById), "Reservas", new { id = reserva.Id }, Request.Scheme);
+            if (selfUrl != null) dto.Links.Add(new LinkDto(selfUrl, "self", "GET"));
+
+            if (usuario != null)
+            {
+                var usuarioUrl = Url.Action(nameof(UsuariosController.GetUsuario), "Usuarios", new { id = usuario.Id }, Request.Scheme);
+                if (usuarioUrl != null) dto.Links.Add(new LinkDto(usuarioUrl, "usuario_reserva", "GET"));
+            }
+
+            if (abrigo != null)
+            {
+                var abrigoUrl = Url.Action(nameof(AbrigosController.GetAbrigo), "Abrigos", new { id = abrigo.Id }, Request.Scheme);
+                if (abrigoUrl != null) dto.Links.Add(new LinkDto(abrigoUrl, "abrigo_reserva", "GET"));
+            }
+            
+            var solicitanteId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole(UserRoles.Admin);
+
+            if (reserva.Status == ReservaStatus.Ativa)
+            {
+                var validarUrl = Url.Action(nameof(ValidarReservaParaIoT), "Reservas", new { codigoReserva = reserva.CodigoReserva }, Request.Scheme);
+                if (validarUrl != null) dto.Links.Add(new LinkDto(validarUrl, "validar_reserva_iot", "GET"));
+                
+                if (isAdmin || (!string.IsNullOrEmpty(solicitanteId) && reserva.UsuarioId.ToString() == solicitanteId))
+                {
+                    var cancelarUrl = Url.Action(nameof(CancelarReserva), "Reservas", new { id = reserva.Id }, Request.Scheme);
+                    if (cancelarUrl != null) dto.Links.Add(new LinkDto(cancelarUrl, "cancelar_reserva", "PUT"));
+                }
+            }
+            
+            return dto;
         }
     }
 } 
