@@ -1,0 +1,48 @@
+variables:
+  buildConfiguration: 'Release'
+  dotnetSdkVersion: '8.x'
+  projectPath: 'Ponabri.Api/Ponabri.Api.csproj'
+  azureSubscription: 'ConexaoPonabriAzure'
+  webAppName: '$(AZURE_WEBAPP_NAME)'
+  resourceGroupName: '$(AZURE_RESOURCE_GROUP_NAME)'
+  sqlAzureConnectionStringName: 'DefaultConnection' 
+
+steps:
+  - task: UseDotNet@2
+    displayName: 'Use .NET SDK $(dotnetSdkVersion)'
+    inputs:
+      packageType: 'sdk'
+      version: '$(dotnetSdkVersion)'
+      installationPath: $(Agent.ToolsDirectory)/dotnet
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Restore NuGet Packages for Project $(projectPath)'
+    inputs:
+      command: 'restore'
+      projects: '$(projectPath)'
+      feedsToUse: 'select'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Build Project $(projectPath)'
+
+  - task: AzureWebApp@0
+    displayName: 'Deploy to Azure Web App'
+    inputs:
+      azureSubscription: $(azureSubscription)
+      appType: 'webApp'
+      appName: $(webAppName)
+      package: $(Build.ArtifactStagingDirectory)/**/*.zip
+      runtimeStack: 'DOTNET|8.x'
+      deploymentMethod: 'RunFromPackage'
+      resourceGroupName: $(resourceGroupName)
+      sqlAzureConnectionStringName: $(sqlAzureConnectionStringName)
+      overwriteAppSettings: true
+      appSettings:
+        - name: ConnectionStrings:DefaultConnection
+          value: $(sqlAzureConnectionStringName)
+
+  - task: PublishArtifact@0
+    displayName: 'Publish Artifact'
+    inputs:
+      buildArtifacts: '$(Build.ArtifactStagingDirectory)/**/*'
+      artifactName: '$(Build.ArtifactStagingDirectory)' 
