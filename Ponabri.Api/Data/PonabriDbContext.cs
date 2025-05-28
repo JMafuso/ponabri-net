@@ -29,6 +29,11 @@ namespace Ponabri.Api.Data
                 .HasOne(r => r.Abrigo)
                 .WithMany(a => a.Reservas)
                 .HasForeignKey(r => r.AbrigoId);
+
+            // Mapear bool para NUMBER(1) no Oracle
+            modelBuilder.Entity<Reserva>()
+                .Property(r => r.UsouVagaCarro)
+                .HasColumnType("NUMBER(1)"); // 0 para false, 1 para true
         }
     }
 } 

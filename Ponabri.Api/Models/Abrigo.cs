@@ -21,6 +21,7 @@ namespace Ponabri.Api.Models
         public int VagasCarrosDisponiveis { get; set; }
         public string ContatoResponsavel { get; set; }
         public AbrigoStatus Status { get; set; } = AbrigoStatus.Aberto;
+        public string Descricao { get; set; } // Novo campo para ML.NET
         public string? CategoriaSugeridaML { get; set; } // Campo para ML.NET
         public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
     }
