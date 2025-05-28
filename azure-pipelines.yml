@@ -1,23 +1,31 @@
+variables:
+  dotnetSdkVersion: '8.0.x'
+  buildConfiguration: 'Release'
+  projectPath: '**/Ponabri.Api.csproj'
+  artifactName: 'ponabri-api-artifact'
+
 stages:
 - stage: Build
   displayName: 'Build .NET App'
   jobs:
   - job: BuildJob
     displayName: 'Build and Publish Artifact'
+    pool:
+      vmImage: 'windows-latest'
+
     steps:
     - task: UseDotNet@2
       displayName: 'Use .NET SDK $(dotnetSdkVersion)'
       inputs:
         packageType: 'sdk'
         version: '$(dotnetSdkVersion)'
-        installationPath: $(Agent.ToolsDirectory)/dotnet
 
     - task: DotNetCoreCLI@2
       displayName: 'Restore NuGet Packages for Project $(projectPath)'
       inputs:
         command: 'restore'
         projects: '$(projectPath)'
-        feedsToUse: 'select' 
+        feedsToUse: 'select'
 
     - task: DotNetCoreCLI@2
       displayName: 'Build Project $(projectPath)'
@@ -36,8 +44,32 @@ stages:
         zipAfterPublish: true
 
     - task: PublishBuildArtifacts@1
-      displayName: 'Publish Artifact: ponabri-api-artifact'
+      displayName: 'Publish Artifact: $(artifactName)'
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)/api'
-        ArtifactName: 'ponabri-api-artifact'
+        ArtifactName: '$(artifactName)'
         publishLocation: 'Container'
+
+- stage: Deploy
+  displayName: 'Deploy to Azure App Service'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeployWebApp
+    displayName: 'Deploy Web App'
+    pool:
+      vmImage: 'windows-latest'
+    environment: 'Production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebApp@1
+            displayName: 'Deploy Ponabri API to App Service'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appType: 'webApp'
+              appName: '$(webAppName)'
+              resourceGroupName: '$(resourceGroupName)'
+              package: '$(Pipeline.Workspace)/ponabri-api-artifact/Ponabri.Api.zip'
+              deploymentMethod: 'zipDeploy'
