@@ -7,17 +7,6 @@ class Program
 {
     static void Main(string[] args)
     {
-        // Tente ambas as strings de conexão, uma de cada vez, comentando a outra.
-        // String de conexão formato Easy Connect (SID)
-        string connectionString = "User Id=rm552570;Password=020596;Data Source=oracle.fiap.com.br:1521/ORCL;";
-        
-        // String de conexão formato longo (Service Name)
-        // string connectionString = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oracle.fiap.com.br)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORCL)));User Id=rm552570;Password=020596;";
-
-        Console.WriteLine($"Tentando conectar com: {connectionString}");
-
-        OracleConnection? con = null;
-        try
         {
             con = new OracleConnection(connectionString);
             Console.WriteLine("Objeto OracleConnection criado.");
