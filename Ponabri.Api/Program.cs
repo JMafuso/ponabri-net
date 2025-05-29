@@ -97,16 +97,12 @@ builder.Services.AddSingleton<ShelterCategoryService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ponabri.Api v1");
-        c.RoutePrefix = "swagger"; // Mantém em /swagger
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ponabri.Api v1");
+    c.RoutePrefix = "swagger"; // Mantém em /swagger
+});
 
 app.UseHttpsRedirection();
 

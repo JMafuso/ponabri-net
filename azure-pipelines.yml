@@ -67,9 +67,9 @@ stages:
           - task: AzureWebApp@1
             displayName: 'Deploy Ponabri API to App Service'
             inputs:
-              azureSubscription: '$(azureSubscription)'
+              azureSubscription: 'AzurePonabriConnection'
               appType: 'webApp'
-              appName: '$(webAppName)'
-              resourceGroupName: '$(resourceGroupName)'
+              appName: 'PonabriApiApp'
+              resourceGroupName: 'rg-ponabri-dev'
               package: '$(Pipeline.Workspace)/ponabri-api-artifact/Ponabri.Api.zip'
               deploymentMethod: 'zipDeploy'

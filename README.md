@@ -36,7 +36,6 @@ A API Ponabri é uma aplicação RESTful desenvolvida em ASP.NET Core para geren
 - Swagger UI disponível para testes e visualização da API.
 
 ## Testes e Validação
-- Rate Limiting ativado e testado com sucesso, limitando requisições conforme configurado.
 - Recomenda-se a realização de testes automatizados para garantir a robustez da API.
 
 ## Como Testar o Rate Limiting via Swagger
@@ -57,5 +56,6 @@ Para realizar testes autenticados no swagger, utilize o seguinte usuário admini
 - Email: admin@admin.com
 - Senha: Admin!123
 
-Use essas credenciais para obter o token JWT via endpoint `POST /api/Usuarios/login` e autorizar requisições protegidas, como `GET /api/Usuarios`.
+---
 
+Este documento serve como base para a apresentação e documentação do projeto Ponabri API para a disciplina de .NET.

@@ -15,21 +15,18 @@ namespace Ponabri.Api.Services
         private readonly IConnection? _connection;
         private readonly IModel? _channel;
 
-        public RabbitMQProducer() // Idealmente, injetar configurações
+        public RabbitMQProducer()
         {
             try
             {
-                var factory = new ConnectionFactory() { HostName = "localhost" }; // Use sua config do RabbitMQ
+                var factory = new ConnectionFactory() { HostName = "localhost" };
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
             }
             catch (Exception ex)
             {
-                // Logar erro de conexão com RabbitMQ
+                
                 Console.WriteLine($"Erro ao conectar ao RabbitMQ: {ex.Message}");
-                // Tratar ou relançar a exceção conforme necessário
-                // Em um cenário real, você pode ter um fallback ou um sistema de retry.
-                // Para este exemplo, se não conectar, as mensagens não serão enviadas.
                 _connection = null; 
                 _channel = null;
             }
