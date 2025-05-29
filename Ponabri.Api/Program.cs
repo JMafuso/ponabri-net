@@ -1,23 +1,20 @@
 using Microsoft.EntityFrameworkCore;
-using Ponabri.Api.Data; // Ajuste o namespace
-using AspNetCoreRateLimit; // Adicionar no topo
-using Ponabri.Api.Services; // Adicionar
+using Ponabri.Api.Data;
+using AspNetCoreRateLimit;
+using Ponabri.Api.Services;
 using Microsoft.OpenApi.Models;
-using System.Text; // Para JWT
-using Microsoft.AspNetCore.Authentication.JwtBearer; // Para JWT
-using Microsoft.IdentityModel.Tokens; // Para JWT
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ponabri.Api", Version = "v1" });
 
-    // Configuração para usar JWT no Swagger UI
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "Autenticação JWT usando o esquema Bearer. \r\n\r\n Digite 'Bearer' [espaço] e então seu token no input de texto abaixo.\r\n\r\nExemplo: \"Bearer 12345abcdef\"",
@@ -46,12 +43,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Configuração de Autenticação JWT
 var jwtKey = builder.Configuration["JwtSettings:Key"];
 if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
 {
-    // Log ou throw exception. Em produção, isso deve impedir o startup.
-    // Considerar usar um mecanismo de validação de configuração na inicialização.
     throw new InvalidOperationException("A chave JWT (JwtSettings:Key) não está configurada corretamente no appsettings.json ou é muito curta. Deve ter pelo menos 32 caracteres.");
 }
 
@@ -74,16 +68,14 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization(); // Necessário para [Authorize]
+builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<PonabriDbContext>(options =>
     options.UseOracle(builder.Configuration.GetConnectionString("DefaultConnection"), opt =>
     {
-        // Configurações específicas do Oracle, se necessário, por exemplo:
-        opt.UseOracleSQLCompatibility(Microsoft.EntityFrameworkCore.OracleSQLCompatibility.DatabaseVersion19); // Corrigido para DatabaseVersion19 com base na documentação
+        opt.UseOracleSQLCompatibility(Microsoft.EntityFrameworkCore.OracleSQLCompatibility.DatabaseVersion19);
     }));
 
-// Antes de builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
 builder.Services.Configure<IpRateLimitPolicies>(builder.Configuration.GetSection("IpRateLimitPolicies"));
@@ -96,6 +88,7 @@ builder.Services.AddSingleton<IMessageProducer, RabbitMQProducer>();
 builder.Services.AddSingleton<ShelterCategoryService>();
 
 var app = builder.Build();
+
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
