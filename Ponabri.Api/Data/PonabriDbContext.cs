@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Ponabri.Api.Models; // Ajuste o namespace se necessário
+using Ponabri.Api.Models; 
 
 namespace Ponabri.Api.Data
 {
@@ -13,13 +13,10 @@ namespace Ponabri.Api.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configurações adicionais do modelo, chaves compostas, etc.
-            // Exemplo: Código da reserva deve ser único
             modelBuilder.Entity<Reserva>()
                 .HasIndex(r => r.CodigoReserva)
                 .IsUnique();
 
-            // Relacionamentos (EF Core geralmente descobre, mas pode ser explícito)
             modelBuilder.Entity<Reserva>()
                 .HasOne(r => r.Usuario)
                 .WithMany(u => u.Reservas)
@@ -30,10 +27,9 @@ namespace Ponabri.Api.Data
                 .WithMany(a => a.Reservas)
                 .HasForeignKey(r => r.AbrigoId);
 
-            // Mapear bool para NUMBER(1) no Oracle
             modelBuilder.Entity<Reserva>()
                 .Property(r => r.UsouVagaCarro)
-                .HasColumnType("NUMBER(1)"); // 0 para false, 1 para true
+                .HasColumnType("bit");
         }
     }
-} 
+}

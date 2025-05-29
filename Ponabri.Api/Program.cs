@@ -70,8 +70,11 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") 
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<PonabriDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddMemoryCache();
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
@@ -86,21 +89,18 @@ builder.Services.AddSingleton<ShelterCategoryService>();
 
 var app = builder.Build();
 
-
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ponabri.Api v1");
-    c.RoutePrefix = "swagger"; // Mantém em /swagger
+    c.RoutePrefix = "swagger";
 });
 
 app.UseHttpsRedirection();
 
-// IMPORTANTE: Adicionar antes de app.UseAuthorization();
-app.UseIpRateLimiting(); // Garantir que está na forma original
+app.UseIpRateLimiting();
 
-// Adicionar Autenticação e Autorização ao pipeline
-app.UseAuthentication(); // IMPORTANTE: Antes de UseAuthorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

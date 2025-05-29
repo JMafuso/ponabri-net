@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Ponabri.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialOracleCreateWithCorrectBoolMap : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,19 +15,19 @@ namespace Ponabri.Api.Migrations
                 name: "Abrigos",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    NomeLocal = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    Endereco = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    Regiao = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    CapacidadePessoas = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    VagasPessoasDisponiveis = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    CapacidadeCarros = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    VagasCarrosDisponiveis = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    ContatoResponsavel = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    Status = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    Descricao = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    CategoriaSugeridaML = table.Column<string>(type: "NVARCHAR2(2000)", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    NomeLocal = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Endereco = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Regiao = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CapacidadePessoas = table.Column<int>(type: "int", nullable: false),
+                    VagasPessoasDisponiveis = table.Column<int>(type: "int", nullable: false),
+                    CapacidadeCarros = table.Column<int>(type: "int", nullable: false),
+                    VagasCarrosDisponiveis = table.Column<int>(type: "int", nullable: false),
+                    ContatoResponsavel = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Descricao = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CategoriaSugeridaML = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -38,11 +38,12 @@ namespace Ponabri.Api.Migrations
                 name: "Usuarios",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    Nome = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    Email = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    Senha = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nome = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Senha = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -53,15 +54,15 @@ namespace Ponabri.Api.Migrations
                 name: "Reservas",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    CodigoReserva = table.Column<string>(type: "NVARCHAR2(450)", nullable: false),
-                    UsuarioId = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    AbrigoId = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    QuantidadePessoas = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    UsouVagaCarro = table.Column<bool>(type: "NUMBER(1)", nullable: false),
-                    DataCriacao = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: false),
-                    Status = table.Column<int>(type: "NUMBER(10)", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CodigoReserva = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UsuarioId = table.Column<int>(type: "int", nullable: false),
+                    AbrigoId = table.Column<int>(type: "int", nullable: false),
+                    QuantidadePessoas = table.Column<int>(type: "int", nullable: false),
+                    UsouVagaCarro = table.Column<bool>(type: "bit", nullable: false),
+                    DataCriacao = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

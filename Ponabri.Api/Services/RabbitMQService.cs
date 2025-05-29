@@ -25,7 +25,6 @@ namespace Ponabri.Api.Services
             }
             catch (Exception ex)
             {
-                
                 Console.WriteLine($"Erro ao conectar ao RabbitMQ: {ex.Message}");
                 _connection = null; 
                 _channel = null;
@@ -37,7 +36,7 @@ namespace Ponabri.Api.Services
             if (_channel == null || !_channel.IsOpen)
             {
                 Console.WriteLine("Canal RabbitMQ não está disponível. Mensagem não enviada.");
-                return; // Não envia se não houver canal
+                return;
             }
 
             _channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null!);
@@ -47,4 +46,4 @@ namespace Ponabri.Api.Services
             _channel.BasicPublish(exchange: "", routingKey: queueName, basicProperties: null!, body: body);
         }
     }
-} 
+}
