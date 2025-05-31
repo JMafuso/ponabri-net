@@ -105,7 +105,7 @@ Acesse a documentação interativa da API via Swagger UI em:
 https://localhost:<porta>/swagger
 ```
 
-![alt text](image.png)
+![alt text](Ponabri.Api/images/image.png)
 
 ---
 
@@ -133,14 +133,14 @@ https://localhost:<porta>/swagger
 
 ## Testes via Swagger
 Visão geral do Swagger:
-![alt text](image-1.png)
+![alt text](Ponabri.Api/images/image-1.png)
 
 Exemplo de teste em dois endpoints via Swagger:
 - **POST /api/Usuarios/registrar**: registra um novo usuário
-![alt text](image-2.png)
+![alt text](Ponabri.Api/images/image-2.png)
 
 - **POST /api/Usuarios/login**: autentica um usuário
-![alt text](image-3.png)
+![alt text](Ponabri.Api/images/image-3.png)
 
 ---
 
@@ -150,13 +150,13 @@ Primeiro faça login com as credenciais:
 - E-mail: "admin@admin.com"
 - Senha: "Admin!123"
 - Copie ou anote o token que foi gerado
-![alt text](image-5.png)
+![alt text](Ponabri.Api/images/image-5.png)
 
 - Clique em Authorize
-![alt text](image-4.png)
+![alt text](Ponabri.Api/images/image-4.png)
 
 - Digite Bearer <token> e cole o token
-![alt text](image-6.png)
+![alt text](Ponabri.Api/images/image-6.png)
 
 - Modo admin ativado, sinalização visual de cadeado fechado
-![alt text](image-7.png)
+![alt text](Ponabri.Api/images/image-7.png)
