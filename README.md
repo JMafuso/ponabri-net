@@ -136,7 +136,7 @@ https://localhost:<porta>/swagger
 Exemplo de teste em dois endpoints via Swagger:
 - **POST /api/Usuarios/registrar**: registra um novo usuário
 
-![alt text](images/image-2.png)
+![alt text](images/image-8.png)
 
 - **POST /api/Usuarios/login**: autentica um usuário
 
