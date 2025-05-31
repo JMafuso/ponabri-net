@@ -154,7 +154,7 @@ Primeiro faça login com as credenciais:
 ![alt text](images/image-5.png)
 
 - Clique em Authorize
-![alt text](images/image-4.png)
+![alt text](images/image-9.png)
 
 - Digite Bearer <token> e cole o token
 
