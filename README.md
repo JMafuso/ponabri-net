@@ -144,6 +144,11 @@ Exemplo de teste em dois endpoints via Swagger:
 
 ---
 
+## Acesso à API
+
+Acesse a API via Swagger UI em:
+https://ponabriapiapp-ggdbf5fagphpfzc8.brazilsouth-01.azurewebsites.net/swagger/index.html
+
 ## Modo admin
 
 Primeiro faça login com as credenciais:
