@@ -132,14 +132,14 @@ https://localhost:<porta>/swagger
 ---
 
 ## Testes via Swagger
-Visão geral do Swagger:
-![alt text](images/image-1.png)
 
 Exemplo de teste em dois endpoints via Swagger:
 - **POST /api/Usuarios/registrar**: registra um novo usuário
+
 ![alt text](images/image-2.png)
 
 - **POST /api/Usuarios/login**: autentica um usuário
+
 ![alt text](images/image-3.png)
 
 ---
@@ -150,13 +150,16 @@ Primeiro faça login com as credenciais:
 - E-mail: "admin@admin.com"
 - Senha: "Admin!123"
 - Copie ou anote o token que foi gerado
+
 ![alt text](images/image-5.png)
 
 - Clique em Authorize
 ![alt text](images/image-4.png)
 
 - Digite Bearer <token> e cole o token
+
 ![alt text](images/image-6.png)
 
 - Modo admin ativado, sinalização visual de cadeado fechado
+
 ![alt text](images/image-7.png)
