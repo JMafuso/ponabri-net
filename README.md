@@ -163,4 +163,4 @@ Primeiro faça login com as credenciais:
 
 - Modo admin ativado, sinalização visual de cadeado fechado
 
-![alt text](images/image-7.png)
+![alt text](images/authorize.png)
