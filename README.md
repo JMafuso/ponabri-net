@@ -68,7 +68,7 @@ A Ponabri API é uma API RESTful desenvolvida em ASP.NET Core para gerenciar abr
 1. Clone o repositório:
 
 ```bash
-git clone <https://github.com/JMafuso/ponabri-net.git>
+git clone https://github.com/JMafuso/ponabri-net.git
 cd ponabri-net/Ponabri.Api
 ```
 
@@ -76,7 +76,7 @@ cd ponabri-net/Ponabri.Api
 
 ```bash
 dotnet user-secrets init
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=tcp:ponabri-sqlserver.database.windows.net,1433;Initial Catalog=PonabriDB;Persist Security Info=False;User ID=rm552570;Password=SUA_SENHA_CORRETA_DO_AZURE_SQL;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=tcp:ponabri-sqlserver.database.windows.net,1433;Initial Catalog=PonabriDB;Persist Security Info=False;User ID=rm552570;Password=Admin123;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 dotnet user-secrets set "JwtSettings:Key" "<CHAVE_SECRETA_JWT_MINIMO_32_CARACTERES>"
 dotnet user-secrets set "JwtSettings:Issuer" "<ISSUER_DO_TOKEN>"
 dotnet user-secrets set "JwtSettings:Audience" "<AUDIENCE_DO_TOKEN>"

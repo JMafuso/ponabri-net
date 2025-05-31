@@ -9,6 +9,12 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add user-secrets configuration in Development environment
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets(System.Reflection.Assembly.GetExecutingAssembly(), optional: true);
+}
+
 builder.Services.AddControllers();
 
 builder.Services.AddSwaggerGen(c =>
