@@ -26,7 +26,7 @@ A Ponabri API é uma API RESTful desenvolvida em ASP.NET Core para gerenciar abr
 
 ## Tecnologias Utilizadas
 
-- .NET 7 (ASP.NET Core)
+- .NET 8.0.410 (ASP.NET Core)
 - Entity Framework Core
 - Oracle Database (desenvolvimento local via User Secrets/variáveis de ambiente)
 - Azure SQL Database (deploy na nuvem via Application Settings)
@@ -128,3 +128,35 @@ https://localhost:<porta>/swagger
   - `ConnectionStrings__DefaultConnection` (string de conexão para Azure SQL Database)
   - `JwtSettings__Key`, `JwtSettings__Issuer`, `JwtSettings__Audience`
 - Certifique-se de que o RabbitMQ e demais serviços estejam acessíveis conforme ambiente de produção.
+
+---
+
+## Testes via Swagger
+Visão geral do Swagger:
+![alt text](image-1.png)
+
+Exemplo de teste em dois endpoints via Swagger:
+- **POST /api/Usuarios/registrar**: registra um novo usuário
+![alt text](image-2.png)
+
+- **POST /api/Usuarios/login**: autentica um usuário
+![alt text](image-3.png)
+
+---
+
+## Modo admin
+
+Primeiro faça login com as credenciais:
+- E-mail: "admin@admin.com"
+- Senha: "Admin!123"
+- Copie ou anote o token que foi gerado
+![alt text](image-5.png)
+
+- Clique em Authorize
+![alt text](image-4.png)
+
+- Digite Bearer <token> e cole o token
+![alt text](image-6.png)
+
+- Modo admin ativado, sinalização visual de cadeado fechado
+![alt text](image-7.png)
