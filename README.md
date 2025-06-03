@@ -1,6 +1,8 @@
 # Ponabri API - Sistema de Gerenciamento de Abrigos e Reservas
 
 ---
+## Atenção, o acesso através da URL "https://ponabriapiapp-ggdbf5fagphpfzc8.brazilsouth-01.azurewebsites.net/swagger/index.html" para testes nos endpoints deve ser executado mais de uma vez, pois faz algumas validações no primeiro executar e pode mostrar o código 500.
+---
 
 ## Checklist de Requisitos da Disciplina 'Advanced Business Development with .NET'
 
@@ -134,6 +136,27 @@ https://localhost:<porta>/swagger
 ## Testes via Swagger
 
 Exemplo de teste em dois endpoints via Swagger:
+
+- **POST /api/Abrigos**: Registra novo abrigo
+
+![alt text](images/abrigosPost.png)
+
+- **GET /api/Abrigos**: Busca abrigos disponíveis
+
+![alt text](images/abrigosGet.png)
+
+---
+
+- **POST /api/Reservas**: Registra a reserva
+
+![alt text](images/reservasPost.png)
+
+- **GET /api/Reservas**: Busca reservas
+
+![alt text](images/reservasGet.png)
+
+---
+
 - **POST /api/Usuarios/registrar**: registra um novo usuário
 
 ![alt text](images/image-8.png)
