@@ -1,7 +1,13 @@
 # Ponabri API - Sistema de Gerenciamento de Abrigos e Reservas
 
 ---
-## Atenção, o acesso através da URL "https://ponabriapiapp-ggdbf5fagphpfzc8.brazilsouth-01.azurewebsites.net/swagger/index.html" para testes nos endpoints deve ser executado mais de uma vez, pois faz algumas validações no primeiro executar e pode mostrar o código 500.
+## Nota sobre o Primeiro Acesso à API no Azure App Service (Cold Start):
+
+A API Ponabri está hospedada no Azure App Service utilizando um plano que entra em estado ocioso após períodos de inatividade devido ao plano Free que não permite o "Always On" habilitado).
+
+Consequentemente, a primeira requisição a um endpoint da API (ou ao carregar o Swagger UI) após um período de inatividade ou um novo deploy pode levar um tempo maior para responder ou, resultar em um erro HTTP 500 inicial enquanto a aplicação "aquece"(processo conhecido como "cold start"). Isso ocorre porque o App Service precisa carregar a aplicação na memória, compilar o JIT e estabelecer conexões, como o banco de dados.
+
+Se você encontrar um erro 500 na primeira tentativa de acesso, por favor, aguarde alguns segundos e tente a requisição novamente. As requisições subsequentes devem responder normalmente e com a performance esperada, pois a aplicação já estará "aquecida". Este comportamento é característico do ambiente de hospedagem e não um erro na lógica da aplicação em si.
 ---
 
 ## Checklist de Requisitos da Disciplina 'Advanced Business Development with .NET'
